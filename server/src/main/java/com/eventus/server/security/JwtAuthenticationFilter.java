@@ -2,7 +2,7 @@ package com.eventus.server.security;
 
 import java.io.IOException;
 
-import org.springframework.lang.NonNull;
+import jakarta.annotation.Nonnull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,9 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
+            @Nonnull HttpServletRequest request,
+            @Nonnull HttpServletResponse response,
+            @Nonnull FilterChain filterChain
     ) throws ServletException, IOException {
         String token = extractTokenFromRequest(request);
 
