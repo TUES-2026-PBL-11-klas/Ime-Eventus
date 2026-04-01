@@ -1,6 +1,7 @@
 package com.eventus.server.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,56 +29,34 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // ── Public endpoints ──────────────────────────────────────
-
-    /**
-     * GET /api/categories - List all active categories (public).
-     */
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryResponse>> getActiveCategories() {
         return ResponseEntity.ok(categoryService.getActiveCategories());
     }
 
-    /**
-     * GET /api/categories/{id} - Get a category by ID (public).
-     */
     @GetMapping("/categories/{id}")
-    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
-    // ── Admin endpoints ───────────────────────────────────────
-
-    /**
-     * GET /api/admin/categories - List all categories including inactive (admin).
-     */
     @GetMapping("/admin/categories")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
-    /**
-     * POST /api/admin/categories - Create a new category (admin).
-     */
     @PostMapping("/admin/categories")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.createCategory(request));
     }
 
-    /**
-     * PUT /api/admin/categories/{id} - Update a category (admin).
-     */
     @PutMapping("/admin/categories/{id}")
-    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable Long id,
+    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable UUID id,
                                                            @Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
-    /**
-     * DELETE /api/admin/categories/{id} - Deactivate a category (admin).
-     */
     @DeleteMapping("/admin/categories/{id}")
-    public ResponseEntity<Void> deactivateCategory(@PathVariable Long id) {
+    public ResponseEntity<Void> deactivateCategory(@PathVariable UUID id) {
         categoryService.deactivateCategory(id);
         return ResponseEntity.noContent().build();
     }

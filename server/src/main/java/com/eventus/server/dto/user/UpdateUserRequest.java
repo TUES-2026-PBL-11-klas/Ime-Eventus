@@ -18,11 +18,8 @@ public class UpdateUserRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    @Size(max = 100)
-    private String firstName;
-
-    @Size(max = 100)
-    private String lastName;
+    @Size(max = 255)
+    private String fullName;
 
     private Boolean active;
 

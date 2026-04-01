@@ -1,6 +1,7 @@
 package com.eventus.server.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,11 +9,13 @@ import org.springframework.stereotype.Repository;
 import com.eventus.server.entity.Notification;
 
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
-    List<Notification> findByRecipientId(Long recipientId);
+    List<Notification> findByRecipientId(UUID recipientId);
 
-    List<Notification> findByRecipientIdAndIsRead(Long recipientId, boolean isRead);
+    List<Notification> findByRecipientIdAndReadAtIsNull(UUID recipientId);
 
-    int countByRecipientIdAndIsRead(Long recipientId, boolean isRead);
+    List<Notification> findByRecipientIdAndReadAtIsNotNull(UUID recipientId);
+
+    int countByRecipientIdAndReadAtIsNull(UUID recipientId);
 }

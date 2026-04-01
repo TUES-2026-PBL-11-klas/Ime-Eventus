@@ -5,5 +5,8 @@ public enum EventStatus {
     PENDING_APPROVAL,
     APPROVED,
     PUBLISHED,
-    CANCELLED
+    COMPLETED,
+    CANCELLED,
+    CONFLICT,
+    FULLY_BOOKED
 }

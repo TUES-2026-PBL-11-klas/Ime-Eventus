@@ -1,9 +1,12 @@
 package com.eventus.server.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,8 +32,9 @@ import lombok.Setter;
 public class AttendanceRecord {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
@@ -40,11 +44,19 @@ public class AttendanceRecord {
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean isPresent;
+    private AttendanceStatus status = AttendanceStatus.ABSENT;
 
-    @Column(nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "marked_by")
+    private User markedBy;
+
+    @Column(name = "marked_at", nullable = false, updatable = false)
     private LocalDateTime markedAt;
+
+    @Column(length = 500)
+    private String note;
 
     @PrePersist
     protected void onCreate() {

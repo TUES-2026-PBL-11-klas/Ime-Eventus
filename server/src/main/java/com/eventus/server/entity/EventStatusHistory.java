@@ -21,12 +21,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "approval_requests")
+@Table(name = "event_status_history")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApprovalRequest {
+public class EventStatusHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -38,28 +38,25 @@ public class ApprovalRequest {
     private Event event;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ApprovalStatus status = ApprovalStatus.PENDING;
+    @Column(name = "from_status")
+    private EventStatus fromStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "to_status", nullable = false)
+    private EventStatus toStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "submitted_by", nullable = false)
-    private User submittedBy;
+    @JoinColumn(name = "changed_by", nullable = false)
+    private User changedBy;
 
-    @Column(name = "submitted_at", nullable = false, updatable = false)
-    private LocalDateTime submittedAt;
+    @Column(name = "changed_at", nullable = false, updatable = false)
+    private LocalDateTime changedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewed_by")
-    private User reviewedBy;
-
-    @Column(name = "reviewed_at")
-    private LocalDateTime reviewedAt;
-
-    @Column(name = "rejection_reason", length = 1000)
-    private String rejectionReason;
+    @Column(length = 1000)
+    private String reason;
 
     @PrePersist
     protected void onCreate() {
-        submittedAt = LocalDateTime.now();
+        changedAt = LocalDateTime.now();
     }
 }

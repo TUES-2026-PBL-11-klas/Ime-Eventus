@@ -1,7 +1,7 @@
 package com.eventus.server.security;
 
-import com.eventus.server.entity.User;
-import com.eventus.server.repository.UserRepository;
+import java.util.List;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,11 +9,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.eventus.server.entity.User;
+import com.eventus.server.repository.UserRepository;
 
-/**
- * Loads user details from the database for Spring Security authentication.
- */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -30,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode().name()))
                 .toList();
 
         return new org.springframework.security.core.userdetails.User(
