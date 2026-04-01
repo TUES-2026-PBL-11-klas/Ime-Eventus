@@ -21,13 +21,17 @@ public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 30, nullable = false, unique = true)
-    private ERole name;
+    @Column(name = "code", length = 50, nullable = false, unique = true)
+    private ERole code;
 
-    public Role(ERole name) {
+    @Column(name = "name", length = 100, nullable = false)
+    private String name;
+
+    public Role(ERole code, String name) {
+        this.code = code;
         this.name = name;
     }
 }

@@ -1,6 +1,7 @@
 package com.eventus.server.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,8 +30,9 @@ import lombok.Setter;
 public class WaitlistEntry {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
@@ -43,11 +45,20 @@ public class WaitlistEntry {
     @Column(nullable = false)
     private int position;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime addedAt;
+    @Column(name = "joined_at", nullable = false, updatable = false)
+    private LocalDateTime joinedAt;
+
+    @Column(name = "promoted_at")
+    private LocalDateTime promotedAt;
+
+    @Column(name = "removed_at")
+    private LocalDateTime removedAt;
+
+    @Column(name = "removal_reason", length = 500)
+    private String removalReason;
 
     @PrePersist
     protected void onCreate() {
-        addedAt = LocalDateTime.now();
+        joinedAt = LocalDateTime.now();
     }
 }

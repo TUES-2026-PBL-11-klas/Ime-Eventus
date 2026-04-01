@@ -1,6 +1,7 @@
 package com.eventus.server.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,19 +25,20 @@ import lombok.Setter;
 public class EventCategory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "text")
     private String description;
 
     @Column(nullable = false, length = 30)
     private String color;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
     @Column(nullable = false, updatable = false)

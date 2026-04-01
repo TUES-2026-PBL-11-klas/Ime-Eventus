@@ -18,30 +18,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "resources")
+@Table(name = "departments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Resource {
+public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @Column(columnDefinition = "text")
-    private String description;
-
-    @Column(name = "total_quantity", nullable = false)
-    private int totalQuantity;
-
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
-
-    @OneToMany(mappedBy = "resource", fetch = FetchType.LAZY)
-    private Set<ResourceBooking> bookings = new HashSet<>();
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+    private Set<TeacherProfile> teachers = new HashSet<>();
 }

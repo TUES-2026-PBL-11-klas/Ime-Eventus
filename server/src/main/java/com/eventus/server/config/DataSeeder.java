@@ -22,14 +22,18 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        for (ERole eRole : ERole.values()) {
-            if (!roleRepository.existsByName(eRole)) {
-                Role role = new Role();
-                role.setName(eRole);
-                roleRepository.save(role);
-                log.info("Seeded role: {}", eRole.name());
-            }
-        }
+        seedRole(ERole.STUDENT,     "Student");
+        seedRole(ERole.TEACHER,     "Teacher");
+        seedRole(ERole.COORDINATOR, "Coordinator");
+        seedRole(ERole.ADMIN,       "Administrator");
         log.info("Role seeding complete. Total roles: {}", roleRepository.count());
+    }
+
+    private void seedRole(ERole code, String displayName) {
+        if (!roleRepository.existsByCode(code)) {
+            Role role = new Role(code, displayName);
+            roleRepository.save(role);
+            log.info("Seeded role: {} ({})", code.name(), displayName);
+        }
     }
 }

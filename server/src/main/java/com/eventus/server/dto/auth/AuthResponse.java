@@ -1,6 +1,7 @@
 package com.eventus.server.dto.auth;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,18 +16,16 @@ public class AuthResponse {
 
     private String token;
     private String type = "Bearer";
-    private Long id;
+    private UUID id;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private List<String> roles;
 
-    public AuthResponse(String token, Long id, String email, String firstName, String lastName, List<String> roles) {
+    public AuthResponse(String token, UUID id, String email, String fullName, List<String> roles) {
         this.token = token;
         this.id = id;
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.fullName = fullName;
         this.roles = roles;
     }
 }

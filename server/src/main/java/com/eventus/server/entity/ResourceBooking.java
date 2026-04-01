@@ -5,8 +5,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,12 +19,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "approval_requests")
+@Table(name = "resource_bookings")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApprovalRequest {
+public class ResourceBooking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -37,29 +35,24 @@ public class ApprovalRequest {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @Enumerated(EnumType.STRING)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resource_id", nullable = false)
+    private Resource resource;
+
     @Column(nullable = false)
-    private ApprovalStatus status = ApprovalStatus.PENDING;
+    private int quantity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "submitted_by", nullable = false)
-    private User submittedBy;
+    @Column(name = "start_at", nullable = false)
+    private LocalDateTime startAt;
 
-    @Column(name = "submitted_at", nullable = false, updatable = false)
-    private LocalDateTime submittedAt;
+    @Column(name = "end_at", nullable = false)
+    private LocalDateTime endAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewed_by")
-    private User reviewedBy;
-
-    @Column(name = "reviewed_at")
-    private LocalDateTime reviewedAt;
-
-    @Column(name = "rejection_reason", length = 1000)
-    private String rejectionReason;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        submittedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 }

@@ -9,9 +9,9 @@ import com.eventus.server.entity.ERole;
 import com.eventus.server.entity.Role;
 
 @Repository
-public interface RoleRepository extends JpaRepository<Role, Long> {
+public interface RoleRepository extends JpaRepository<Role, Integer> {
 
-    Optional<Role> findByName(ERole name);
+    Optional<Role> findByCode(ERole code);
 
-    boolean existsByName(ERole name);
+    boolean existsByCode(ERole code);
 }
