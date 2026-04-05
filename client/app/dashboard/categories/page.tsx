@@ -27,14 +27,14 @@ export default function CategoriesPage() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hasRole("ROLE_ADMIN")) {
+    if (!hasRole("ADMIN")) {
       router.replace("/dashboard");
     }
   }, [hasRole, router]);
@@ -100,7 +100,7 @@ export default function CategoriesPage() {
     fetchCategories();
   };
 
-  const handleDeactivate = async (id: number) => {
+  const handleDeactivate = async (id: string) => {
     if (!token) return;
     await categoryService.deactivateCategory(id, token);
     fetchCategories();

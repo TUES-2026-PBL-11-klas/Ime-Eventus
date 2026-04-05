@@ -45,7 +45,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!hasRole("ROLE_ADMIN")) {
+    if (!hasRole("ADMIN")) {
       router.replace("/dashboard");
       return;
     }
@@ -65,7 +65,7 @@ export default function UsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleDeactivate = async (id: number) => {
+  const handleDeactivate = async (id: string) => {
     if (!token) return;
     const res = await userService.deactivateUser(id, token);
     if (res.success) {
@@ -75,8 +75,7 @@ export default function UsersPage() {
 
   const filtered = users.filter(
     (u) =>
-      u.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      u.lastName.toLowerCase().includes(search.toLowerCase()) ||
+      u.fullName.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -160,7 +159,7 @@ export default function UsersPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((user) => {
-                const roleKey = mapRole(user.roles[0] ?? "ROLE_STUDENT");
+                const roleKey = mapRole(user.roles[0] ?? "STUDENT");
                 const Icon = roleIcons[roleKey];
                 return (
                   <tr
@@ -170,7 +169,7 @@ export default function UsersPage() {
                     <td className="px-5 py-3">
                       <div>
                         <p className="text-sm font-medium text-foreground">
-                          {user.firstName} {user.lastName}
+                          {user.fullName}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {user.email}

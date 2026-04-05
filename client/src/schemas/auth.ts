@@ -11,8 +11,7 @@ export type LoginInput = z.infer<typeof LoginSchema>;
 export const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  fullName: z.string().min(1, "Full name is required"),
   roles: z.array(z.string()).optional(),
 });
 export type RegisterInput = z.infer<typeof RegisterSchema>;
@@ -20,10 +19,9 @@ export type RegisterInput = z.infer<typeof RegisterSchema>;
 export const AuthResponseSchema = z.object({
   token: z.string(),
   type: z.string(),
-  id: z.number(),
+  id: z.string(),
   email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
+  fullName: z.string(),
   roles: z.array(z.string()),
 });
 export type AuthResponseData = z.infer<typeof AuthResponseSchema>;
@@ -31,10 +29,9 @@ export type AuthResponseData = z.infer<typeof AuthResponseSchema>;
 // ── User Schemas ────────────────────────────────────────────
 
 export const UserResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
+  fullName: z.string(),
   active: z.boolean(),
   roles: z.array(z.string()),
   createdAt: z.string(),
@@ -44,8 +41,7 @@ export type UserResponseData = z.infer<typeof UserResponseSchema>;
 
 export const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
-  firstName: z.string().min(1).optional(),
-  lastName: z.string().min(1).optional(),
+  fullName: z.string().min(1).optional(),
   active: z.boolean().optional(),
   roles: z.array(z.string()).optional(),
 });
@@ -54,7 +50,7 @@ export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 // ── Category Schemas ────────────────────────────────────────
 
 export const CategoryResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   description: z.string(),
   color: z.string(),

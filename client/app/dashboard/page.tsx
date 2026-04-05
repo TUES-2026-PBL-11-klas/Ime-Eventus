@@ -23,7 +23,7 @@ export default function DashboardPage() {
           Dashboard
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Welcome back, {user?.firstName}. You are signed in as{" "}
+          Welcome back, {user?.fullName}. You are signed in as{" "}
           <span className="capitalize font-medium">{role}</span>.
         </p>
       </div>

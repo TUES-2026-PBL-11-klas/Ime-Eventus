@@ -8,14 +8,14 @@ export async function getAllUsers(token: string) {
   return httpClient<UserResponseData[]>("GET", "/api/admin/users", undefined, token);
 }
 
-export async function getUserById(id: number, token: string) {
+export async function getUserById(id: string, token: string) {
   return httpClient<UserResponseData>("GET", `/api/admin/users/${id}`, undefined, token);
 }
 
-export async function updateUser(id: number, data: UpdateUserInput, token: string) {
+export async function updateUser(id: string, data: UpdateUserInput, token: string) {
   return httpClient<UserResponseData>("PUT", `/api/admin/users/${id}`, data, token);
 }
 
-export async function deactivateUser(id: number, token: string) {
+export async function deactivateUser(id: string, token: string) {
   return httpClient<void>("DELETE", `/api/admin/users/${id}`, undefined, token);
 }

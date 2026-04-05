@@ -46,9 +46,6 @@ public class AuthService {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    /**
-     * Authenticate user and return JWT token.
-     */
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -64,13 +61,9 @@ public class AuthService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        return new AuthResponse(token, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roles);
+        return new AuthResponse(token, user.getId(), user.getEmail(), user.getFullName(), roles);
     }
 
-    /**
-     * Register a new user account.
-     */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -80,21 +73,19 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setFullName(request.getFullName());
         user.setActive(true);
 
-        // Assign roles - default to STUDENT if none specified
         Set<Role> roles = new HashSet<>();
         if (request.getRoles() == null || request.getRoles().isEmpty()) {
-            Role studentRole = roleRepository.findByName(ERole.ROLE_STUDENT)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "ROLE_STUDENT"));
+            Role studentRole = roleRepository.findByCode(ERole.STUDENT)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", "code", "STUDENT"));
             roles.add(studentRole);
         } else {
             for (String roleName : request.getRoles()) {
                 ERole eRole = ERole.valueOf(roleName);
-                Role role = roleRepository.findByName(eRole)
-                        .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName));
+                Role role = roleRepository.findByCode(eRole)
+                        .orElseThrow(() -> new ResourceNotFoundException("Role", "code", roleName));
                 roles.add(role);
             }
         }
@@ -102,17 +93,16 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // Auto-login after registration
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         String token = jwtTokenProvider.generateToken(authentication);
 
         List<String> roleNames = savedUser.getRoles().stream()
-                .map(r -> r.getName().name())
+                .map(r -> r.getCode().name())
                 .toList();
 
         return new AuthResponse(token, savedUser.getId(), savedUser.getEmail(),
-                savedUser.getFirstName(), savedUser.getLastName(), roleNames);
+                savedUser.getFullName(), roleNames);
     }
 }

@@ -3,31 +3,30 @@
  * Pure type definitions — no framework dependencies.
  */
 
-export type Role = "ROLE_STUDENT" | "ROLE_TEACHER" | "ROLE_COORDINATOR" | "ROLE_ADMIN";
+export type Role = "STUDENT" | "TEACHER" | "COORDINATOR" | "ADMIN";
 
 export type UserRole = "student" | "teacher" | "coordinator" | "admin";
 
 /** Map backend role names to friendly UI role names */
 export const ROLE_DISPLAY: Record<Role, UserRole> = {
-  ROLE_STUDENT: "student",
-  ROLE_TEACHER: "teacher",
-  ROLE_COORDINATOR: "coordinator",
-  ROLE_ADMIN: "admin",
+  STUDENT: "student",
+  TEACHER: "teacher",
+  COORDINATOR: "coordinator",
+  ADMIN: "admin",
 };
 
 /** Map UI role names back to backend role names */
 export const ROLE_BACKEND: Record<UserRole, Role> = {
-  student: "ROLE_STUDENT",
-  teacher: "ROLE_TEACHER",
-  coordinator: "ROLE_COORDINATOR",
-  admin: "ROLE_ADMIN",
+  student: "STUDENT",
+  teacher: "TEACHER",
+  coordinator: "COORDINATOR",
+  admin: "ADMIN",
 };
 
 export interface AuthUser {
-  id: number;
+  id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   roles: Role[];
 }
 
@@ -37,10 +36,9 @@ export interface AuthTokens {
 }
 
 export interface UserRecord {
-  id: number;
+  id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   active: boolean;
   roles: string[];
   createdAt: string;
@@ -48,7 +46,7 @@ export interface UserRecord {
 }
 
 export interface CategoryRecord {
-  id: number;
+  id: string;
   name: string;
   description: string;
   color: string;

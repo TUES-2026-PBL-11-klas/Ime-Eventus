@@ -26,8 +26,7 @@ export function useAuthActions() {
           const user: AuthUser = {
             id: d.id,
             email: d.email,
-            firstName: d.firstName,
-            lastName: d.lastName,
+            fullName: d.fullName,
             roles: d.roles as Role[],
           };
           setAuth(d.token, user);
@@ -53,8 +52,7 @@ export function useAuthActions() {
           const user: AuthUser = {
             id: d.id,
             email: d.email,
-            firstName: d.firstName,
-            lastName: d.lastName,
+            fullName: d.fullName,
             roles: d.roles as Role[],
           };
           setAuth(d.token, user);

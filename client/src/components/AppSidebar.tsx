@@ -76,10 +76,10 @@ interface AppSidebarProps {
 function getPrimaryRole(roles: Role[]): UserRole {
   // Priority: admin > coordinator > teacher > student
   const priority: Role[] = [
-    "ROLE_ADMIN",
-    "ROLE_COORDINATOR",
-    "ROLE_TEACHER",
-    "ROLE_STUDENT",
+    "ADMIN",
+    "COORDINATOR",
+    "TEACHER",
+    "STUDENT",
   ];
   for (const r of priority) {
     if (roles.includes(r)) return ROLE_DISPLAY[r];
@@ -106,7 +106,7 @@ export function AppSidebar({ activePath, onNavigate, user, onLogout }: AppSideba
       {/* User info */}
       <div className="px-5 py-3 border-b border-border">
         <p className="text-sm font-medium text-foreground truncate">
-          {user.firstName} {user.lastName}
+          {user.fullName}
         </p>
         <p className="text-xs text-muted-foreground capitalize">{role}</p>
       </div>
