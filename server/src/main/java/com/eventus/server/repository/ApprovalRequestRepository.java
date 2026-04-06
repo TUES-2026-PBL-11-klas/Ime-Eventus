@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.eventus.server.entity.ApprovalRequest;
+import com.eventus.server.entity.ApprovalStatus;
 
 @Repository
 public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest, UUID> {
@@ -14,4 +15,6 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByEventId(UUID eventId);
 
     List<ApprovalRequest> findBySubmittedById(UUID userId);
+
+    boolean existsByEventIdAndStatus(UUID eventId, ApprovalStatus status);
 }
