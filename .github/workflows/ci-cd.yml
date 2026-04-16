@@ -1,0 +1,126 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-build-test:
+    name: Backend - Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Build with Maven
+        run: cd server && mvn clean package -DskipTests
+      
+      - name: Run Maven Tests
+        run: cd server && mvn test
+  
+  frontend-build-lint:
+    name: Frontend (Client) - Build & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      
+      - name: Install dependencies
+        working-directory: ./client
+        run: pnpm install --frozen-lockfile
+      
+      - name: Type checking
+        working-directory: ./client
+        run: pnpm typecheck
+      
+      - name: Linting
+        working-directory: ./client
+        run: pnpm lint
+      
+      - name: Build
+        working-directory: ./client
+        run: pnpm build
+  
+  ui-tests:
+    name: UI - Test with Vitest
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      
+      - name: Install dependencies
+        working-directory: ./UI/eventopia-squared-main
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run tests
+        working-directory: ./UI/eventopia-squared-main
+        run: pnpm test
+  
+  deploy-backend-render:
+    name: Deploy Backend to Render
+    runs-on: ubuntu-latest
+    needs: [backend-build-test, frontend-build-lint, ui-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl $RENDER_DEPLOY_HOOK
+            echo "Backend deployment triggered on Render"
+          else
+            echo "WARNING: RENDER_DEPLOY_HOOK_BACKEND secret not configured"
+          fi
+  
+  deploy-frontend-render:
+    name: Deploy Frontend to Render
+    runs-on: ubuntu-latest
+    needs: [backend-build-test, frontend-build-lint, ui-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl $RENDER_DEPLOY_HOOK
+            echo "Frontend deployment triggered on Render"
+          else
+            echo "WARNING: RENDER_DEPLOY_HOOK_FRONTEND secret not configured"
+          fi
