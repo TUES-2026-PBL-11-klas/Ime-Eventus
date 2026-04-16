@@ -27,6 +27,15 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = "eventus_token";
 const USER_KEY = "eventus_user";
+const TOKEN_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
+
+function setTokenCookie(token: string) {
+  document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; Path=/; Max-Age=${TOKEN_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+}
+
+function clearTokenCookie() {
+  document.cookie = `${TOKEN_KEY}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
@@ -56,12 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setAuth = useCallback((token: string, user: AuthUser) => {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setTokenCookie(token);
     setState({ user, token, isLoading: false });
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    clearTokenCookie();
     setState({ user: null, token: null, isLoading: false });
   }, []);
 

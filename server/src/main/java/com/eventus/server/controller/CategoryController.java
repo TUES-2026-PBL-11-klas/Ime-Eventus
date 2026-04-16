@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,32 +31,38 @@ public class CategoryController {
     }
 
     @GetMapping("/categories")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<CategoryResponse>> getActiveCategories() {
         return ResponseEntity.ok(categoryService.getActiveCategories());
     }
 
     @GetMapping("/categories/{id}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable UUID id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
     @GetMapping("/admin/categories")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @PostMapping("/admin/categories")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.createCategory(request));
     }
 
     @PutMapping("/admin/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> updateCategory(@PathVariable UUID id,
                                                            @Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
     @DeleteMapping("/admin/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivateCategory(@PathVariable UUID id) {
         categoryService.deactivateCategory(id);
         return ResponseEntity.noContent().build();

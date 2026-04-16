@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,21 +30,25 @@ public class EventController {
     }
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<EventResponse> getEventById(@PathVariable UUID id) {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'COORDINATOR', 'ADMIN')")
     public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody EventRequest request) {
         return ResponseEntity.ok(eventService.createEvent(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'COORDINATOR', 'ADMIN')")
     public ResponseEntity<EventResponse> updateEvent(@PathVariable UUID id,
                                                      @Valid @RequestBody EventRequest request) {
         return ResponseEntity.ok(eventService.updateEvent(id, request));
