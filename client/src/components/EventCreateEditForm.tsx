@@ -162,14 +162,21 @@ export function EventCreateEditForm({
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Category (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      // Convert sentinel value back to empty string
+                      field.onChange(value === "__none__" ? "" : value);
+                    }}
+                    defaultValue={field.value || "__none__"}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="__none__">No category</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
@@ -189,14 +196,20 @@ export function EventCreateEditForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Room (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <Select
+                    onValueChange={(value) => {
+                      // Convert sentinel value back to empty string
+                      field.onChange(value === "__none__" ? "" : value);
+                    }}
+                    defaultValue={field.value || "__none__"}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a room" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No specific room</SelectItem>
+                      <SelectItem value="__none__">No specific room</SelectItem>
                       {rooms.map((room) => (
                         <SelectItem key={room.id} value={room.id}>
                           {room.name}

@@ -3,13 +3,30 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Calendar, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuthActions } from "@/client/actions/auth";
-import { RegisterSchema } from "@/schemas/auth";
+import { RegisterSchema, type RegisterInput } from "@/schemas/auth";
 
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "Student" },
@@ -19,110 +36,191 @@ const ROLE_OPTIONS = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, error, isLoading } = useAuthActions();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("STUDENT");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const { register, error } = useAuthActions();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const form = useForm<RegisterInput>({
+    resolver: zodResolver(RegisterSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      roles: ["STUDENT"],
+    },
+  });
 
-    const parsed = RegisterSchema.safeParse({ email, password, fullName, roles: [role] });
-    if (!parsed.success) {
-      setValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
-      return;
-    }
-
-    const ok = await register(parsed.data);
-    if (ok) {
-      router.push("/dashboard");
+  const handleSubmit = async (data: RegisterInput) => {
+    setIsLoading(true);
+    try {
+      const ok = await register(data);
+      if (ok) {
+        router.push("/dashboard");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const displayError = validationError ?? error;
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Calendar className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center space-y-3">
+          {/* Logo */}
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80">
+            <Calendar className="h-7 w-7 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Join Eventus to manage school events</CardDescription>
+          <div>
+            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
+            <CardDescription className="mt-1">
+              Join Eventus to discover and register for school events
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full name</Label>
-              <Input
-                id="fullName"
-                placeholder="Jane Smith"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              {/* Full Name */}
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Jane Smith"
+                        autoComplete="name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@school.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email address</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@school.edu"
+                        autoComplete="email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>Use your school email address</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                required
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          className="pr-10"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>At least 6 characters</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+              {/* Role Selection */}
+              <FormField
+                control={form.control}
+                name="roles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange([value])}
+                      defaultValue={field.value?.[0] || "STUDENT"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {ROLE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>Choose your role in the school</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Error Message */}
+              {error && (
+                <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20">
+                  {error}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-10 text-base font-medium"
+                disabled={isLoading}
               >
-                {ROLE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
+                {isLoading ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                    Creating account…
+                  </>
+                ) : (
+                  "Create account"
+                )}
+              </Button>
 
-            {displayError && (
-              <p className="text-sm text-destructive">{displayError}</p>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account…" : "Create account"}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </form>
+              {/* Sign In Link */}
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
