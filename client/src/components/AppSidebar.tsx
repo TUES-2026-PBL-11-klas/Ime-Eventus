@@ -43,8 +43,8 @@ const navigationByRole: Record<UserRole, NavItem[]> = {
   ],
   teacher: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Events", href: "/dashboard/events", icon: Calendar },
-    { name: "Approvals", href: "/dashboard/approvals", icon: ClipboardCheck },
+    { name: "My Events", href: "/dashboard/my-events", icon: ClipboardCheck },
+    { name: "All Events", href: "/dashboard/events", icon: Calendar },
     { name: "Registrations", href: "/dashboard/registrations", icon: Users },
     { name: "Rooms & Resources", href: "/dashboard/rooms", icon: MapPin },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
@@ -57,6 +57,7 @@ const navigationByRole: Record<UserRole, NavItem[]> = {
   coordinator: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Approvals", href: "/dashboard/approvals", icon: ClipboardCheck },
+    { name: "All Events", href: "/dashboard/events", icon: Calendar },
     { name: "Activity Monitor", href: "/dashboard/activity", icon: Activity },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
     { name: "Rooms & Resources", href: "/dashboard/rooms", icon: MapPin },

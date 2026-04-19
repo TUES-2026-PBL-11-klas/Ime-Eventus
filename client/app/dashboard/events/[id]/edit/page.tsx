@@ -23,6 +23,7 @@ export default function EditEventPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasRole("TEACHER") && !hasRole("COORDINATOR") && !hasRole("ADMIN")) {
@@ -35,42 +36,37 @@ export default function EditEventPage() {
     setPageLoading(true);
     try {
       const [eventRes, categoriesRes] = await Promise.all([
-        eventService.getEventById(token, eventId),
+        eventService.getEventById(eventId, token),
         categoryService.getAllCategories(token),
       ]);
-
-      if (eventRes.success) {
-        setEvent(eventRes.data);
-      }
-      if (categoriesRes.success) {
-        setCategories(categoriesRes.data);
-      }
+      if (eventRes.success) setEvent(eventRes.data);
+      if (categoriesRes.success) setCategories(categoriesRes.data);
     } finally {
       setPageLoading(false);
     }
   }, [token, eventId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSubmit = async (data: EventRequestData) => {
-    // TODO: Implement API call to update event
-    console.log("Updating event:", data);
-    // setLoading(true);
-    // try {
-    //   const res = await eventService.updateEvent(token, eventId, data);
-    //   if (res.success) {
-    //     router.push(`/dashboard/events/${eventId}`);
-    //   }
-    // } finally {
-    //   setLoading(false);
-    // }
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await eventService.updateEvent(token, eventId, data);
+      if (res.success) {
+        router.push(`/dashboard/events/${eventId}`);
+      } else {
+        setError("Failed to update event. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (pageLoading) {
     return (
-      <div className="p-6 space-y-5">
+      <div className="p-6">
         <div className="text-center text-sm text-muted-foreground py-12">Loading event...</div>
       </div>
     );
@@ -78,7 +74,7 @@ export default function EditEventPage() {
 
   if (!event) {
     return (
-      <div className="p-6 space-y-5">
+      <div className="p-6">
         <div className="text-center text-sm text-muted-foreground py-12">Event not found.</div>
       </div>
     );
@@ -103,13 +99,19 @@ export default function EditEventPage() {
         <p className="text-sm text-muted-foreground mt-0.5">Update event details</p>
       </div>
 
+      {error && (
+        <div className="rounded-lg bg-destructive/10 text-destructive text-sm px-4 py-3">
+          {error}
+        </div>
+      )}
+
       <div className="max-w-2xl">
         <EventCreateEditForm
           initialData={initialData}
           onSubmit={handleSubmit}
           isLoading={loading}
           categories={categories}
-          rooms={[]} // TODO: Fetch rooms from API
+          rooms={[]}
           currentUserId={user?.id || ""}
           defaultStatus={event.status}
         />

@@ -1,5 +1,6 @@
 package com.eventus.server.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import com.eventus.server.dto.event.EventResponse;
 import com.eventus.server.entity.Event;
 import com.eventus.server.entity.EventCategory;
 import com.eventus.server.entity.EventStatus;
+import com.eventus.server.entity.EventStatusHistory;
 import com.eventus.server.entity.Registration;
 import com.eventus.server.entity.RegistrationStatus;
 import com.eventus.server.entity.Room;
@@ -20,6 +22,7 @@ import com.eventus.server.exception.BadRequestException;
 import com.eventus.server.exception.ResourceNotFoundException;
 import com.eventus.server.repository.EventCategoryRepository;
 import com.eventus.server.repository.EventRepository;
+import com.eventus.server.repository.EventStatusHistoryRepository;
 import com.eventus.server.repository.RegistrationRepository;
 import com.eventus.server.repository.RoomRepository;
 import com.eventus.server.repository.UserRepository;
@@ -33,6 +36,7 @@ public class EventService {
     private final RoomRepository roomRepository;
     private final RegistrationRepository registrationRepository;
     private final NotificationService notificationService;
+    private final EventStatusHistoryRepository statusHistoryRepository;
 
     public EventService(
             EventRepository eventRepository,
@@ -40,13 +44,15 @@ public class EventService {
             UserRepository userRepository,
             RoomRepository roomRepository,
             RegistrationRepository registrationRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            EventStatusHistoryRepository statusHistoryRepository) {
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.registrationRepository = registrationRepository;
         this.notificationService = notificationService;
+        this.statusHistoryRepository = statusHistoryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -75,27 +81,51 @@ public class EventService {
         return mapToResponse(event);
     }
 
+    @Transactional(readOnly = true)
+    public List<EventResponse> getMyEvents(UUID organizerId) {
+        User organizer = userRepository.findById(organizerId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", organizerId));
+        return eventRepository.findAll().stream()
+                .filter(e -> e.getOrganizer().getId().equals(organizer.getId()))
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     @Transactional
-    public EventResponse createEvent(EventRequest request) {
+    public EventResponse createEvent(EventRequest request, UUID changedById) {
         User organizer = userRepository.findById(request.getOrganizerId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getOrganizerId()));
+
+        User changedBy = userRepository.findById(changedById)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", changedById));
 
         Event event = new Event();
         applyRequest(event, request, organizer);
         Event saved = eventRepository.save(event);
+
+        recordHistory(saved, null, saved.getStatus(), changedBy, null);
+
         return mapToResponse(saved);
     }
 
     @Transactional
-    public EventResponse updateEvent(UUID id, EventRequest request) {
+    public EventResponse updateEvent(UUID id, EventRequest request, UUID changedById) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
 
         User organizer = userRepository.findById(request.getOrganizerId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getOrganizerId()));
 
+        User changedBy = userRepository.findById(changedById)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", changedById));
+
+        EventStatus previousStatus = event.getStatus();
         applyRequest(event, request, organizer);
         Event saved = eventRepository.save(event);
+
+        if (previousStatus != saved.getStatus()) {
+            recordHistory(saved, previousStatus, saved.getStatus(), changedBy, null);
+        }
 
         List<Registration> active = registrationRepository.findByEventIdAndStatusIn(
                 id, List.of(RegistrationStatus.CONFIRMED, RegistrationStatus.WAITLISTED));
@@ -107,7 +137,7 @@ public class EventService {
     }
 
     @Transactional
-    public void cancelEvent(UUID id) {
+    public void cancelEvent(UUID id, UUID changedById) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
 
@@ -115,15 +145,42 @@ public class EventService {
             throw new BadRequestException("Event is already cancelled");
         }
 
+        User changedBy = userRepository.findById(changedById)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", changedById));
+
+        EventStatus previousStatus = event.getStatus();
         event.setStatus(EventStatus.CANCELLED);
-        event.setCancelledAt(java.time.LocalDateTime.now());
+        event.setCancelledAt(LocalDateTime.now());
         Event saved = eventRepository.save(event);
+
+        recordHistory(saved, previousStatus, EventStatus.CANCELLED, changedBy, null);
 
         List<Registration> active = registrationRepository.findByEventIdAndStatusIn(
                 id, List.of(RegistrationStatus.CONFIRMED, RegistrationStatus.WAITLISTED));
         if (!active.isEmpty()) {
             notificationService.createForEventCancellation(saved, active);
         }
+    }
+
+    @Transactional
+    public EventResponse publishEvent(UUID id, UUID changedById) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
+
+        if (event.getStatus() != EventStatus.APPROVED) {
+            throw new BadRequestException("Only approved events can be published");
+        }
+
+        User changedBy = userRepository.findById(changedById)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", changedById));
+
+        event.setStatus(EventStatus.PUBLISHED);
+        event.setPublishedAt(LocalDateTime.now());
+        Event saved = eventRepository.save(event);
+
+        recordHistory(saved, EventStatus.APPROVED, EventStatus.PUBLISHED, changedBy, null);
+
+        return mapToResponse(saved);
     }
 
     @Transactional
@@ -145,6 +202,16 @@ public class EventService {
         event.setCapacity(request.getCapacity());
         event.setAllowWaitlist(request.isAllowWaitlist());
         event.setRegistrationDeadlineAt(request.getRegistrationDeadlineAt());
+    }
+
+    void recordHistory(Event event, EventStatus fromStatus, EventStatus toStatus, User changedBy, String reason) {
+        EventStatusHistory history = new EventStatusHistory();
+        history.setEvent(event);
+        history.setFromStatus(fromStatus);
+        history.setToStatus(toStatus);
+        history.setChangedBy(changedBy);
+        history.setReason(reason);
+        statusHistoryRepository.save(history);
     }
 
     private EventCategory resolveCategory(UUID categoryId) {
