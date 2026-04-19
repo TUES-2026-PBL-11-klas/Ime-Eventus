@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +37,12 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
+    @GetMapping("/catalog")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<List<EventResponse>> getCatalogEvents(Authentication authentication) {
+        return ResponseEntity.ok(eventService.getCatalogEvents(authentication));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("permitAll()")
     public ResponseEntity<EventResponse> getEventById(@PathVariable UUID id) {
@@ -52,5 +60,12 @@ public class EventController {
     public ResponseEntity<EventResponse> updateEvent(@PathVariable UUID id,
                                                      @Valid @RequestBody EventRequest request) {
         return ResponseEntity.ok(eventService.updateEvent(id, request));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('TEACHER', 'COORDINATOR', 'ADMIN')")
+    public ResponseEntity<Void> cancelEvent(@PathVariable UUID id) {
+        eventService.cancelEvent(id);
+        return ResponseEntity.noContent().build();
     }
 }
