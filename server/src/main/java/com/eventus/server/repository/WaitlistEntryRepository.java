@@ -21,4 +21,8 @@ public interface WaitlistEntryRepository extends JpaRepository<WaitlistEntry, UU
     int countByEventId(UUID eventId);
 
     List<WaitlistEntry> findByEventIdOrderByPosition(UUID eventId);
+
+    List<WaitlistEntry> findByEventIdAndRemovedAtIsNullOrderByPosition(UUID eventId);
+
+    int countByEventIdAndRemovedAtIsNull(UUID eventId);
 }
