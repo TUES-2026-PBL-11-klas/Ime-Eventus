@@ -3,9 +3,9 @@ spring:
     name: eventus-server
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/eventus
-    username: eventus
-    password: eventus
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/eventus}
+    username: ${SPRING_DATASOURCE_USERNAME:eventus}
+    password: ${SPRING_DATASOURCE_PASSWORD:eventus}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,10 +19,10 @@ spring:
     open-in-view: false
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 # JWT Configuration
 app:
   jwt:
-    secret: eventus-secret-key-change-in-production-min-256-bits-long-key-here
-    expiration-ms: 86400000  # 24 hours
+    secret: ${APP_JWT_SECRET:change-me-in-production-min-256-bits-long-key-here}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}
