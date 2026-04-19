@@ -3,94 +3,166 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Calendar, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+} from "@/components/ui/form";
 import { useAuthActions } from "@/client/actions/auth";
-import { LoginSchema } from "@/schemas/auth";
+import { LoginSchema, type LoginInput } from "@/schemas/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, error, isLoading } = useAuthActions();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const { login, error } = useAuthActions();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    const parsed = LoginSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      setValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
-      return;
-    }
-
-    const ok = await login(parsed.data);
-    if (ok) {
-      router.push("/dashboard");
+  const handleSubmit = async (data: LoginInput) => {
+    setIsLoading(true);
+    try {
+      const ok = await login(data);
+      if (ok) {
+        router.push("/dashboard");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const displayError = validationError ?? error;
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center space-y-3">
           {/* Logo */}
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Calendar className="h-6 w-6 text-primary-foreground" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80">
+            <Calendar className="h-7 w-7 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Welcome to Eventus</CardTitle>
-          <CardDescription>Sign in to manage school events</CardDescription>
+          <div>
+            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+            <CardDescription className="mt-1">
+              Sign in to manage school events and register for activities
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@school.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email address</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@school.edu"
+                        autoComplete="email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Password</FormLabel>
+                      <Link
+                        href="#"
+                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Forgot?
+                      </Link>
+                    </div>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          autoComplete="current-password"
+                          className="pr-10"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {displayError && (
-              <p className="text-sm text-destructive">{displayError}</p>
-            )}
+              {/* Error Message */}
+              {error && (
+                <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20">
+                  {error}
+                </div>
+              )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in…" : "Sign in"}
-            </Button>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-10 text-base font-medium"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                    Signing in…
+                  </>
+                ) : (
+                  "Sign in"
+                )}
+              </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-primary hover:underline">
-                Create one
-              </Link>
-            </p>
-          </form>
+              {/* Sign Up Link */}
+              <p className="text-center text-sm text-muted-foreground">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/register"
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Create one
+                </Link>
+              </p>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

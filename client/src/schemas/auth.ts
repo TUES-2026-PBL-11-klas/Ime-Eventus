@@ -11,8 +11,10 @@ export type LoginInput = z.infer<typeof LoginSchema>;
 export const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().min(1, "Full name is required"),
-  roles: z.array(z.string()).optional(),
+  fullName: z.string()
+    .min(1, "Full name is required")
+    .max(255, "Full name must not exceed 255 characters"),
+  roles: z.array(z.string()).min(1, "At least one role is required"),
 });
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 
