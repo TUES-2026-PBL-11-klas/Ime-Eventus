@@ -43,8 +43,20 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // Coordinator endpoints
+                // Coordinator/admin approval endpoints
                 .requestMatchers("/api/approvals/**").hasAnyRole("COORDINATOR", "ADMIN")
+                // Registration endpoints
+                .requestMatchers(HttpMethod.POST, "/api/events/*/register").hasRole("STUDENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/events/*/register").hasRole("STUDENT")
+                .requestMatchers(HttpMethod.GET, "/api/events/*/registrations").hasAnyRole("TEACHER", "COORDINATOR", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/events/*/waitlist").hasAnyRole("TEACHER", "COORDINATOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/events/*/waitlist/*/promote").hasAnyRole("TEACHER", "COORDINATOR", "ADMIN")
+                // Attendance endpoints
+                .requestMatchers(HttpMethod.POST, "/api/events/*/attendance").hasAnyRole("TEACHER", "COORDINATOR", "ADMIN")
+                // Notification endpoints
+                .requestMatchers("/api/notifications/**").authenticated()
+                // My registrations (student self-service)
+                .requestMatchers("/api/registrations/my").hasRole("STUDENT")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
