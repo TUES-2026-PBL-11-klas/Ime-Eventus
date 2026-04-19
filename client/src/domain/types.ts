@@ -54,3 +54,17 @@ export interface CategoryRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+export type EventStatus =
+  | "DRAFT"
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "PUBLISHED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "CONFLICT"
+  | "FULLY_BOOKED";
+
+export type RegistrationStatus = "CONFIRMED" | "WAITLISTED" | "CANCELLED";
+
+export type AttendanceStatus = "PRESENT" | "ABSENT" | "EXCUSED";
