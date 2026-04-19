@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading, logout } = useAuth();
+  const { user, token, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -34,6 +34,7 @@ export default function DashboardLayout({
         activePath={pathname}
         onNavigate={(path) => router.push(path)}
         user={user}
+        token={token}
         onLogout={() => {
           logout();
           router.replace("/login");
