@@ -24,4 +24,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     int countByEventId(UUID eventId);
 
     List<Registration> findByEventIdAndStatus(UUID eventId, RegistrationStatus status);
+
+    int countByEventIdAndStatus(UUID eventId, RegistrationStatus status);
+
+    List<Registration> findByEventIdAndStatusIn(UUID eventId, List<RegistrationStatus> statuses);
 }
