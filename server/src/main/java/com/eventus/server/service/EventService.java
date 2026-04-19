@@ -3,6 +3,7 @@ package com.eventus.server.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,11 +11,16 @@ import com.eventus.server.dto.event.EventRequest;
 import com.eventus.server.dto.event.EventResponse;
 import com.eventus.server.entity.Event;
 import com.eventus.server.entity.EventCategory;
+import com.eventus.server.entity.EventStatus;
+import com.eventus.server.entity.Registration;
+import com.eventus.server.entity.RegistrationStatus;
 import com.eventus.server.entity.Room;
 import com.eventus.server.entity.User;
+import com.eventus.server.exception.BadRequestException;
 import com.eventus.server.exception.ResourceNotFoundException;
 import com.eventus.server.repository.EventCategoryRepository;
 import com.eventus.server.repository.EventRepository;
+import com.eventus.server.repository.RegistrationRepository;
 import com.eventus.server.repository.RoomRepository;
 import com.eventus.server.repository.UserRepository;
 
@@ -25,21 +31,39 @@ public class EventService {
     private final EventCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final RegistrationRepository registrationRepository;
+    private final NotificationService notificationService;
 
     public EventService(
             EventRepository eventRepository,
             EventCategoryRepository categoryRepository,
             UserRepository userRepository,
-            RoomRepository roomRepository) {
+            RoomRepository roomRepository,
+            RegistrationRepository registrationRepository,
+            NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
+        this.registrationRepository = registrationRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventResponse> getCatalogEvents(Authentication authentication) {
+        boolean isStudent = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT"));
+        List<EventStatus> statuses = isStudent
+                ? List.of(EventStatus.APPROVED)
+                : List.of(EventStatus.APPROVED, EventStatus.PUBLISHED);
+        return eventRepository.findByStatusIn(statuses).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -72,7 +96,34 @@ public class EventService {
 
         applyRequest(event, request, organizer);
         Event saved = eventRepository.save(event);
+
+        List<Registration> active = registrationRepository.findByEventIdAndStatusIn(
+                id, List.of(RegistrationStatus.CONFIRMED, RegistrationStatus.WAITLISTED));
+        if (!active.isEmpty()) {
+            notificationService.createForEventUpdate(saved, active);
+        }
+
         return mapToResponse(saved);
+    }
+
+    @Transactional
+    public void cancelEvent(UUID id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event", "id", id));
+
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            throw new BadRequestException("Event is already cancelled");
+        }
+
+        event.setStatus(EventStatus.CANCELLED);
+        event.setCancelledAt(java.time.LocalDateTime.now());
+        Event saved = eventRepository.save(event);
+
+        List<Registration> active = registrationRepository.findByEventIdAndStatusIn(
+                id, List.of(RegistrationStatus.CONFIRMED, RegistrationStatus.WAITLISTED));
+        if (!active.isEmpty()) {
+            notificationService.createForEventCancellation(saved, active);
+        }
     }
 
     @Transactional
