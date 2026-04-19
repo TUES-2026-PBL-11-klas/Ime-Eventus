@@ -1,6 +1,7 @@
 package com.eventus.server.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -24,14 +25,25 @@ public class ApprovalService {
     private final ApprovalRequestRepository approvalRequestRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final EventService eventService;
 
     public ApprovalService(
             ApprovalRequestRepository approvalRequestRepository,
             EventRepository eventRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            EventService eventService) {
         this.approvalRequestRepository = approvalRequestRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.eventService = eventService;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApprovalResponse> getPendingApprovals() {
+        return approvalRequestRepository.findAll().stream()
+                .filter(r -> r.getStatus() == ApprovalStatus.PENDING)
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Transactional
@@ -60,8 +72,12 @@ public class ApprovalService {
 
         ApprovalRequest saved = approvalRequestRepository.save(request);
 
+        EventStatus previousStatus = event.getStatus();
         event.setStatus(EventStatus.PENDING_APPROVAL);
         eventRepository.save(event);
+
+        eventService.recordHistory(event, previousStatus, EventStatus.PENDING_APPROVAL, submitter,
+                "Submitted for approval");
 
         return mapToResponse(saved);
     }
@@ -83,10 +99,13 @@ public class ApprovalService {
         request.setReviewedAt(LocalDateTime.now());
 
         Event event = request.getEvent();
+        EventStatus previousStatus = event.getStatus();
         event.setStatus(EventStatus.APPROVED);
 
         eventRepository.save(event);
         ApprovalRequest saved = approvalRequestRepository.save(request);
+
+        eventService.recordHistory(event, previousStatus, EventStatus.APPROVED, reviewer, "Approved");
 
         return mapToResponse(saved);
     }
@@ -109,10 +128,14 @@ public class ApprovalService {
         request.setRejectionReason(rejectionReason);
 
         Event event = request.getEvent();
+        EventStatus previousStatus = event.getStatus();
         event.setStatus(EventStatus.DRAFT);
 
         eventRepository.save(event);
         ApprovalRequest saved = approvalRequestRepository.save(request);
+
+        eventService.recordHistory(event, previousStatus, EventStatus.DRAFT, reviewer,
+                "Rejected: " + rejectionReason);
 
         return mapToResponse(saved);
     }
