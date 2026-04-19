@@ -5,7 +5,8 @@ import { useAuth } from "@/client/state/auth";
 import { useRouter } from "next/navigation";
 import * as eventService from "@/services/eventService";
 import type { EventResponseData } from "@/schemas/events";
-import { Calendar, Clock, Users, MapPin, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, ChevronRight, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
@@ -59,9 +60,15 @@ export default function EventsPage() {
 
   return (
     <div className="p-6 space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground leading-tight">Events</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Browse published and approved events</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground leading-tight">Events</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Browse published and approved events</p>
+        </div>
+        <Button onClick={() => router.push("/dashboard/events/create")} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Event
+        </Button>
       </div>
 
       <input
